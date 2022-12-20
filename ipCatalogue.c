@@ -6,7 +6,7 @@ int affichageMenu(void)
     int choixMenu;
  
     printf("---Menu---\n\n");
-    printf("1.BoumBadaBoum!\n");
+    printf("1.ip!\n");
     printf("2.BeDingBeDang!\n");
     printf("3.BAAAAAMMMMM!\n");
     printf("4.AieAieAie...Il va falloir tout ramasser!\n\n\n");
