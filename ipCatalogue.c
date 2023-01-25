@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <winsock.h>
+#include <mysql.h>
+
  
 int affichageMenu(void)
 {
