@@ -7,38 +7,52 @@
 #include <string.h>
 #include <unistd.h>
 #include <regex.h>
+#include <arpa/inet.h>
 
 #define MAX_LINE_LENGTH 18
 #define MAX_LINE 300
 
-int is_valid_ip_address(char* str) {
-    char* pattern = "^([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                    "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                    "([01]?\\d\\d?|2[0-4]\\d|25[0-5])\\."
-                    "([01]?\\d\\d?|2[0-4]\\d|25[0-5])$";
 
+// Définition des adresses IP spéciales sous forme de macros
+#define LOOPBACK_IP "127.0.0.1"
+#define BROADCAST_IP "255.255.255.255"
+#define LINK_LOCAL_PREFIX "169.254.0.0"
+
+// Cette fonction prend en entrée une chaîne de caractères représentant une adresse IP et vérifie son format et le nombre d'octets maximum
+int check_ip_address(const char* str)
+{
     regex_t regex;
-    int reti = regcomp(&regex, pattern, REG_EXTENDED);
+    int reti;
+    char msgbuf[100];
 
+    // Le motif d'expression régulière pour la validation d'une adresse IP
+    char* pattern = "^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+
+    // Compilation du motif d'expression régulière
+    reti = regcomp(&regex, pattern, REG_EXTENDED);
     if (reti) {
-        printf("Erreur de compilation de l'expression régulière\n");
-        exit(1);
+        fprintf(stderr, "Impossible de compiler l'expression régulière\n");
+        return -1;
     }
 
+    // Exécution du motif d'expression régulière sur la chaîne d'entrée
     reti = regexec(&regex, str, 0, NULL, 0);
-
     if (!reti) {
-        regfree(&regex);
-        return 1; // la chaîne de caractères correspond à une adresse IP valide
-    } else if (reti == REG_NOMATCH) {
-        regfree(&regex);
-        return 0; // la chaîne de caractères ne correspond pas à une adresse IP valide
-    } else {
-        char error_msg[100];
-        regerror(reti, &regex, error_msg, sizeof(error_msg));
-        printf("Erreur d'exécution de l'expression régulière: %s\n", error_msg);
-        exit(1);
+        printf("Adresse IP valide\n");
+        return 0;
     }
+    else if (reti == REG_NOMATCH) {
+        printf("Adresse IP invalide\n");
+        return -1;
+    }
+    else {
+        regerror(reti, &regex, msgbuf, sizeof(msgbuf));
+        fprintf(stderr, "Échec de la correspondance de l'expression régulière : %s\n", msgbuf);
+        return -1;
+    }
+
+    // Libération de la mémoire utilisée pour stocker la structure de l'expression régulière compilée
+    regfree(&regex);
 }
  
 int affichageMenu(void)
@@ -55,11 +69,112 @@ int affichageMenu(void)
     return choixMenu;   
 }
 
+int is_private_ipv4(struct in_addr addr) {
+    // Vérifie si l'adresse appartient au bloc 10.0.0.0/8
+    if ((ntohl(addr.s_addr) & 0xff000000) == 0x0a000000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 172.16.0.0/12
+    else if ((ntohl(addr.s_addr) & 0xfff00000) == 0xac100000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 192.168.0.0/16
+    else if ((ntohl(addr.s_addr) & 0xffff0000) == 0xc0a80000) {
+        return 1;
+    }
+    // L'adresse n'est pas privée
+    else {
+        return 0;
+    }
+}
+
+int is_special_ipv4(struct in_addr addr) {
+    // Vérifie si l'adresse appartient au bloc 0.0.0.0/8
+    if ((ntohl(addr.s_addr) & 0xff000000) == 0x00000000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 127.0.0.0/8
+    else if ((ntohl(addr.s_addr) & 0xff000000) == 0x7f000000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 169.254.0.0/16
+    else if ((ntohl(addr.s_addr) & 0xffff0000) == 0xa9fe0000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 224.0.0.0/4
+    else if ((ntohl(addr.s_addr) & 0xf0000000) == 0xe0000000) {
+        return 1;
+    }
+    // Vérifie si l'adresse appartient au bloc 240.0.0.0/4
+    else if ((ntohl(addr.s_addr) & 0xf0000000) == 0xf0000000) {
+        return 1;
+    }
+    // L'adresse n'est pas spéciale
+    else {
+        return 0;
+    }
+}
+
+int get_ipv4_type(struct in_addr addr) {
+    // Vérifie si l'adresse est privée
+    if (is_private_ipv4(addr)) {
+        return 1;   // l'adresse IP est privée
+    }
+    // Vérifie si l'adresse est spéciale
+    else if (is_special_ipv4(addr)) {
+        return 2;   // l'adresse IP est spéciale
+    }
+    // L'adresse est publique
+    else {
+        return 0;
+    }
+}
 
 
-char detailIP(ip)
+
+char* detailIP(const char* ip)
 {
-    printf("\n%s\n", ip);
+    system("clear");
+    struct in_addr addr;
+
+    inet_aton(ip, &addr);
+
+    printf("Adresse IP en décimal : %s\n", inet_ntoa(addr));
+
+    printf("Voici l'adresse IP en Hexadecimal : 0x%02x%02x%02x%02x\n",
+    addr.s_addr & 0xff,
+    (addr.s_addr >> 8) & 0xff,
+    (addr.s_addr >> 16) & 0xff,
+    (addr.s_addr >> 24) & 0xff);
+
+    unsigned char *ptr = (unsigned char *)&addr.s_addr;
+    printf("Adresse IP en binaire : ");
+    for (int i = 0; i < 4; i++) {
+        for (int j = 7; j >= 0; j--) {
+            printf("%d", (ptr[i] >> j) & 1);
+        }
+        if (i < 3) {
+            printf(".");
+        }
+    }
+    printf("\n");
+    printf("Adresse IP de type : ");
+    switch (get_ipv4_type(addr))
+    {
+    case 0:
+        printf("Publique\n");
+        break;
+    case 1:
+        printf("privée\n");
+        break;
+    case 2:
+        printf("Spéciale\n");
+        break;
+    }
+    
+
+
+    return 0;
 
 }
 
@@ -113,16 +228,13 @@ int main()
             
             printf("\nRenseigné une adresse IP pour plus de détail\n");
             scanf("%s",&addIPdetail);
-            if (is_valid_ip_address(addIPdetail)) {
-                printf("%s est une adresse IP valide\n", addIPdetail);
-            } else {
-                printf("%s n'est pas une adresse IP valide\n", addIPdetail);
+            while (check_ip_address(addIPdetail)!=0){
+                printf("\nErreur, l'adresse renseigné n'est pas correcte, merci de renseigné une adresse ip correcte : \n");
+                scanf("%s",&addIPdetail);
             }
+            
+            detailIP(addIPdetail);
 
-
-
-
-            // detailIP(addIPdetail);
             break;
         case 5:
             // int suppIP;
