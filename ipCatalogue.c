@@ -171,10 +171,7 @@ char* detailIP(const char* ip)
         printf("Spéciale\n");
         break;
     }
-    
-
-
-    return 0;
+        return 0;
 
 }
 
@@ -223,7 +220,7 @@ int main()
         switch (affichageMenu())
         {
         case 1:
-            printf("Merci de renseigné une IP à enregist");           
+            printf("Merci de renseigné une IP à enregisté");           
             break;
         case 2:
             printf("affichage par masque");
