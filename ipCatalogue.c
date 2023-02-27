@@ -121,59 +121,54 @@ int get_ipv4_type(struct in_addr addr) {
 
 
 // Fonction pour ajouter une adresse IP au tableau de lignes
-void ajout_ip(char*** ip_array, int* ip_count) {
+char **ajout_ip(char** ip_array, int *ip_count) {
+    printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
-    char ip[MAX_LINE_LENGTH];
-    
+    char ip[MAX_LINE_LENGTH+1];
+    char **cpy_tab = NULL;
+    int i, y;
+
     printf("Entrez une adresse IP : ");
     scanf("%s", ip);
-    while (check_ip_address(ip) != 0){
-        printf("\nErreur, l'adresse renseignée n'est pas correcte, merci de renseigner une adresse IP correcte : \n");
+
+    while (check_ip_address(ip) != 0) {
+        printf("Erreur, l'adresse renseignée n'est pas correcte, merci de renseigner une adresse IP correcte : ");
         scanf("%s", ip);
     }
 
-    *ip_array = realloc(*ip_array, (*ip_count + 1) * sizeof(char*)); // Reallouer la mémoire pour le tableau d'adresses IP
-    (*ip_array)[*ip_count] = malloc(strlen(ip) + 1); // Allouer la mémoire pour stocker l'adresse IP
-    if ((*ip_array)[*ip_count] == NULL) {
-        printf("Erreur d'allocation mémoire.\n");
-        exit(1);
+    cpy_tab = malloc((*ip_count + 1) * sizeof(char*));
+
+    if (cpy_tab == NULL) {
+        fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour le tableau d'adresses IP.\n");
+        return NULL;
     }
-    strcpy((*ip_array)[*ip_count], ip); // Copier l'adresse IP dans le tableau
-    (*ip_count)++;
 
+    for (i = 0; i < *ip_count; i++) {
+        int len = strlen(ip_array[i]);
+        cpy_tab[i] = malloc((len+1) * sizeof(char));
+
+        if (cpy_tab[i] == NULL) {
+            fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour l'adresse IP numéro %d.\n", i);
+            return NULL;
+        }
+
+        strcpy(cpy_tab[i], ip_array[i]);
+    }
+
+    int len = strlen(ip);
+    cpy_tab[i] = malloc((len+1) * sizeof(char) + 1);
+
+    if (cpy_tab[i] == NULL) {
+        fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour l'adresse IP numéro %d.\n", i);
+        return NULL;
+    }
+
+    cpy_tab[i][0] = '\n';
+    strcat(cpy_tab[i], ip);
     printf("L'adresse IP %s a été ajoutée au tableau.\n", ip);
+    (*ip_count)++;
+    return cpy_tab;
 }
-
-// void ajouter_ips(char** lines, int max_lines) {
-//     char buffer[MAX_LINE_LENGTH];
-//     int i = 0;
-//     int bits;
-
-//     while (i < max_lines) {
-//         printf("Entrez une adresse IP (ou tapez 'q' pour arrêter) : ");
-//         scanf("%s", buffer);
-
-//         if (strcmp(buffer, "q") == 0) {
-//             break;
-//         }
-
-//         if (check_ip_address(buffer) != 0) {
-//             printf("Erreur, l'adresse renseignée n'est pas correcte.\n");
-//             continue;
-//         }
-
-//         lines[i] = malloc(strlen(buffer) + 1);
-//         if (lines[i] == NULL) {
-//             printf("Erreur d'allocation mémoire.\n");
-//             exit(1);
-//         }
-
-//         strncpy(lines[i], buffer, strlen(buffer));
-//         lines[i][strlen(buffer)] = '\0';
-
-//         i++;
-//     }
-// }
 
 
 
@@ -222,6 +217,7 @@ char* detailIP(const char* ip)
 }
 
 void afficher_ips(char** ip_array, int ip_count) {
+    printf("%d\n",ip_count);
     for (int j = 0; j < ip_count; j++) {
         printf("%s" ,ip_array[j]);
     }
@@ -236,10 +232,15 @@ void afficher_ips(char** ip_array, int ip_count) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main()
 {
-    char* lines[MAX_LINE]; // tableau de pointeurs vers les lignes lues du fichier
+    char **lines; // tableau de pointeurs vers les lignes lues du fichier
     char buffer[MAX_LINE_LENGTH]; // tableau temporaire pour stocker chaque ligne lue
     int i = 0; // compteur pour parcourir le tableau de lignes
-
+    int max_lines = 500; // nombre maximum de lignes à lire
+    lines = malloc(max_lines * sizeof(char *));
+    if (lines == NULL) {
+        printf("Erreur d'allocation mémoire.\n");
+        exit(1);
+    }
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
     fic = open("ipCatalogue.txt", O_RDWR | O_APPEND);
@@ -253,8 +254,7 @@ int main()
 
     // Lecture des lignes du fichier tant que le nombre maximum de lignes n'est pas atteint
     // et tant qu'il y a encore des lignes à lire
-    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0 && i < MAX_LINE ){
-
+    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
         // Allocation dynamique de mémoire pour stocker chaque ligne lue
         lines[i] = malloc(bits + 1);
         if (lines[i] == NULL) {
@@ -281,8 +281,10 @@ int main()
 
 
     int choix = 0;
+    int valeur = i;
 
     while(choix != 6){
+        
 
         printf("---Menu---\n\n");
         printf("1.Ajouter une IP\n");
@@ -300,12 +302,14 @@ int main()
         {
 
             case 1: //ajout IP
-                ajout_ip(lines,i);
+                lines = ajout_ip(lines,&valeur);
+                // valeur=valeur+1;
                 break;
 
             case 2: //affichage IP enregistré
                 printf("\nVoici les IPs enregistrées\n");
-                afficher_ips(lines,i);
+                afficher_ips(lines,valeur);
+                
                 break;
 
             case 3: //suppression IP
