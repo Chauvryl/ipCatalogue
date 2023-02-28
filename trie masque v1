@@ -1,0 +1,30 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_IP_LEN 15
+#define MAX_MASK_LEN 2
+
+int main() {
+    FILE *fp;
+    char ip[MAX_IP_LEN+1], mask[MAX_MASK_LEN+1], filter[MAX_MASK_LEN+1];
+
+    printf("Entrez le masque de réseau pour filtrer les adresses IP: ");
+    scanf("%s", filter);
+
+    fp = fopen("ipCatalogue.txt", "r");
+    if(fp == NULL) {
+        printf("Impossible d'ouvrir le fichier ipCatalogue.txt\n");
+        return 1;
+    }
+
+    printf("Adresses IP avec le masque de réseau %s:\n", filter);
+    while(fscanf(fp, "%s %s", ip, mask) == 2) {
+        if(strcmp(mask, filter) == 0) {
+            printf("%s\n", ip);
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
