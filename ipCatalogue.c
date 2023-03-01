@@ -342,6 +342,8 @@ int main()
 
     }
 
+
+
         // libérer la mémoire allouée pour le tableau de chaînes de caractères
     for (int j = 0; j < i; j++) {
         free(lines[j]);
