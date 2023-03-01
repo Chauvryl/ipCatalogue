@@ -317,68 +317,66 @@ int main()
                 scanf("%s", ip_to_delete);
 
                 char **supprimer_ip(char** ip_array, int *ip_count) {
-    printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
+                printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
-    int index;
-    printf("Entrez l'indice de l'adresse IP à supprimer : ");
-    scanf("%d", &index);
+                int index;
+                printf("Entrez l'indice de l'adresse IP à supprimer : ");
+                scanf("%d", &index);
 
-    if (index >= *ip_count || index < 0) {
-        printf("Erreur: indice invalide\n");
-        return ip_array;
-    }
-
-    char **cpy_tab = malloc((*ip_count - 1) * sizeof(char*));
-
-    if (cpy_tab == NULL) {
-        fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour le tableau d'adresses IP.\n");
-        return ip_array;
-    }
-
-         char **supprimer_ip(char** ip_array, int *ip_count) {
-    printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
-
-    int index;
-    printf("Entrez l'indice de l'adresse IP à supprimer : ");
-    scanf("%d", &index);
-
-    if (index >= *ip_count || index < 0) {
-        printf("Erreur: indice invalide\n");
-        return ip_array;
-    }
-
-    char **cpy_tab = malloc((*ip_count - 1) * sizeof(char*));
-
-    if (cpy_tab == NULL) {
-        fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour le tableau d'adresses IP.\n");
-        return ip_array;
-    }
-
-        int j = 0;
-        for (int i = 0; i < *ip_count; i++) {
-            if (i != index) {
-                int len = strlen(ip_array[i]);
-                cpy_tab[j] = malloc((len+1) * sizeof(char));
-
-                if (cpy_tab[j] == NULL) {
-                    fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour l'adresse IP numéro %d.\n", i);
+                if (index >= *ip_count || index < 0) {
+                    printf("Erreur: indice invalide\n");
                     return ip_array;
                 }
 
-                strcpy(cpy_tab[j], ip_array[i]);
-                j++;
-            }
-            else {
-                printf("L'adresse IP %s a été supprimée du tableau.\n", ip_array[i]);
-                free(ip_array[i]);
-            }
-        }
+                char **cpy_tab = malloc((*ip_count - 1) * sizeof(char*));
 
-        (*ip_count)--;
-        return cpy_tab;
-    }
+                if (cpy_tab == NULL) {
+                    fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour le tableau d'adresses IP.\n");
+                    return ip_array;
+                }
 
+                     char **supprimer_ip(char** ip_array, int *ip_count) {
+                printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
+                int index;
+                printf("Entrez l'indice de l'adresse IP à supprimer : ");
+                scanf("%d", &index);
+
+                if (index >= *ip_count || index < 0) {
+                    printf("Erreur: indice invalide\n");
+                    return ip_array;
+                }
+
+                char **cpy_tab = malloc((*ip_count - 1) * sizeof(char*));
+
+                if (cpy_tab == NULL) {
+                    fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour le tableau d'adresses IP.\n");
+                    return ip_array;
+                }
+
+                    int j = 0;
+                    for (int i = 0; i < *ip_count; i++) {
+                        if (i != index) {
+                            int len = strlen(ip_array[i]);
+                            cpy_tab[j] = malloc((len+1) * sizeof(char));
+
+                            if (cpy_tab[j] == NULL) {
+                                fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour l'adresse IP numéro %d.\n", i);
+                                return ip_array;
+                            }
+
+                            strcpy(cpy_tab[j], ip_array[i]);
+                            j++;
+                        }
+                        else {
+                            printf("L'adresse IP %s a été supprimée du tableau.\n", ip_array[i]);
+                            free(ip_array[i]);
+                        }
+                    }
+
+                    (*ip_count)--;
+                    return cpy_tab;
+                }
                 break;
 
             case 4: // filtre par masque
