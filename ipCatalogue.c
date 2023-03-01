@@ -122,6 +122,7 @@ int get_ipv4_type(struct in_addr addr) {
 
 // Fonction pour ajouter une adresse IP au tableau de lignes
 char **ajout_ip(char** ip_array, int *ip_count) {
+    system("clear");
     printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
     char ip[MAX_LINE_LENGTH+1];
@@ -165,7 +166,7 @@ char **ajout_ip(char** ip_array, int *ip_count) {
 
     cpy_tab[i][0] = '\n';
     strcat(cpy_tab[i], ip);
-    printf("L'adresse IP %s a été ajoutée au tableau.\n", ip);
+    printf("L'adresse IP %s a été ajoutée au tableau.\n\n", ip);
     (*ip_count)++;
     return cpy_tab;
 }
@@ -217,6 +218,7 @@ char* detailIP(const char* ip)
 }
 
 void afficher_ips(char **ip_array, int ip_count, int max_ip_length) {
+    system("clear");
     printf("%d\n", ip_count);
     for (int j = 0; j < ip_count; j++) {
         int spaces = max_ip_length - strlen(ip_array[j]);
@@ -244,15 +246,10 @@ int main()
         exit(1);
     }
 
-    char filename[100];
-    printf("Veuillez saisir un nom du fichier existant pour récupération des IPs ou entrer un nom pour la création de ce fichier (ne pas préciser l'extention .txt)\n\n");
-    scanf("%s", filename);
-
-    strcat(filename,".txt");
 
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
-    fic = open(filename, O_RDWR | O_CREAT , S_IRWXU | S_IRWXG | S_IRWXO);
+    fic = open("ipCatalogue.txt", O_RDWR );
     if (fic == -1){
         printf("Erreur lors de l'ouverture du fichier");
         return 0;
@@ -376,14 +373,9 @@ int main()
 
     }
 
-    char filename2[100];
-    printf("Veuillez saisir un nom du fichier pour l'enregistrement. (ne pas préciser l'extention .txt)\n\n !!!!!!!!!!ATTENTION!!!!!!!!!!\n\nSI CE FICHIER EXISTE DÉJÀ IL SERA ÉCRASÉ !!! : ");
-    scanf("%s", filename2);
-
-    strcat(filename2,".txt");
         // Ouverture du fichier en mode lecture/écriture avec écrasement des données existantes
     int fic2;
-    fic2 = open(filename2, O_RDWR | O_TRUNC | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
+    fic2 = open("ipCatalogue.txt", O_RDWR | O_TRUNC);
 
     if (fic2 == -1){
         printf("Erreur lors de l'ouverture du fichier");
