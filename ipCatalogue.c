@@ -123,7 +123,7 @@ int get_ipv4_type(struct in_addr addr) {
 // Fonction pour ajouter une adresse IP au tableau de lignes
 char **ajout_ip(char** ip_array, int *ip_count) {
     system("clear");
-    printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
+    // printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
     char ip[MAX_LINE_LENGTH+1];
     char **cpy_tab = NULL;
@@ -219,7 +219,7 @@ char* detailIP(const char* ip)
 
 void afficher_ips(char **ip_array, int ip_count, int max_ip_length) {
     system("clear");
-    printf("%d\n", ip_count);
+    // printf("%d\n", ip_count);
     for (int j = 0; j < ip_count; j++) {
         int spaces = max_ip_length - strlen(ip_array[j]);
         printf("%s%*s", ip_array[j], spaces, "");
@@ -332,25 +332,30 @@ int main()
                 break;
 
             case 3: // suppression IP
-                void printIPs(char** lines, int lines_count) {
-                    printf("\nVoici les IPs enregistrées :\n");
-                    for (int i = 0; i < lines_count; i++) {
-                        if (lines[i] != NULL) {
-                            printf("%s\n", lines[i]);
-                        }
-                    }
-                }
+                afficher_ips(lines,lines_count, max_ip_length);
+                printf("\nVoici les IPs enregistrées, saisissez l'adresse IP à supprimer : \n\n"); 
+                char ip_to_delete[MAX_LINE_LENGTH]; 
+                scanf("%s", ip_to_delete); 
+
                 // Recherche de l'indice de l'adresse IP à supprimer dans le tableau
                 int ip_index = -1;
-                for (int i = 0; i < lines_count; i++) {
-                    if (strcmp(lines[i], ip_to_delete) == 0) {
-                        ip_index = i;
-                        break;
+                int trouve = 0;
+                int g = 0;
+                printf("%d", lines_count);
+                while (g <= lines_count && trouve ==1){
+                    if (strcmp(lines[g], ip_to_delete) == 0) {
+                        printf(" ||  %s  ||",lines[g]);
+                        printf(" ||  %s  ||",ip_to_delete);
+
+                        ip_index = g;
+                        trouve = 1;
                     }
+                    g++;
                 }
+                
 
                 if (ip_index == -1) {
-                    printf("L'adresse IP %s n'a pas été trouvée dans le tableau.\n", ip_to_delete);
+                    printf("\nL'adresse IP %s n'a pas été trouvée dans le tableau.\n\n", ip_to_delete);
                 } else {
                     // Suppression de l'adresse IP et décalage des éléments suivants dans le tableau
                     free(lines[ip_index]);
@@ -359,7 +364,7 @@ int main()
                     }
                     lines[lines_count-1] = NULL;
                     lines_count--;
-                    printf("L'adresse IP %s a été supprimée du tableau.\n", ip_to_delete);
+                    printf("\nL'adresse IP %s a été supprimée du tableau.\n\n", ip_to_delete);
                 }
                 break;
 
