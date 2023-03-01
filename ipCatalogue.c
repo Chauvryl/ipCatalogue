@@ -157,13 +157,6 @@ char **ajout_ip(char** ip_array, int *ip_count) {
 
     int len = strlen(ip);
     cpy_tab[i] = malloc((len+1) * sizeof(char) + 1);
-
-    if (cpy_tab[i] == NULL) {
-        fprintf(stderr, "Erreur : échec de l'allocation de mémoire pour l'adresse IP numéro %d.\n", i);
-        return NULL;
-    }
-
-    cpy_tab[i][0] = '\0';
     strcat(cpy_tab[i], ip);
     printf("L'adresse IP %s a été ajoutée au tableau.\n", ip);
     (*ip_count)++;
