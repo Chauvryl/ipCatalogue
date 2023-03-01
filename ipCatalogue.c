@@ -335,20 +335,37 @@ int main()
                 break;
 
             case 3: // suppression IP
-                printf("\nVoici les IPs enregistrées, saisissez l'adresse IP à supprimer : \n");
-                char ip_to_delete[MAX_LINE_LENGTH];
-                scanf("%s", ip_to_delete);
-
-                // Parcours du tableau de lignes pour trouver l'adresse IP à supprimer
-                for (int j = 0; j < lines_count; j++) {
-                    if (strcmp(lines[j], ip_to_delete) == 0) {
-                        free(lines[j]); // libération de la mémoire allouée pour cette ligne
-                        lines[j] = NULL; // assignation de NULL à l'élément supprimé pour éviter les erreurs de pointeurs
-                        printf("L'adresse IP %s a été supprimée du tableau.\n", ip_to_delete);
+                void printIPs(char** lines, int lines_count) {
+                    printf("\nVoici les IPs enregistrées :\n");
+                    for (int i = 0; i < lines_count; i++) {
+                        if (lines[i] != NULL) {
+                            printf("%s\n", lines[i]);
+                        }
+                    }
+                }
+                // Recherche de l'indice de l'adresse IP à supprimer dans le tableau
+                int ip_index = -1;
+                for (int i = 0; i < lines_count; i++) {
+                    if (strcmp(lines[i], ip_to_delete) == 0) {
+                        ip_index = i;
                         break;
                     }
                 }
+
+                if (ip_index == -1) {
+                    printf("L'adresse IP %s n'a pas été trouvée dans le tableau.\n", ip_to_delete);
+                } else {
+                    // Suppression de l'adresse IP et décalage des éléments suivants dans le tableau
+                    free(lines[ip_index]);
+                    for (int i = ip_index; i < lines_count - 1; i++) {
+                        lines[i] = lines[i+1];
+                    }
+                    lines[lines_count-1] = NULL;
+                    lines_count--;
+                    printf("L'adresse IP %s a été supprimée du tableau.\n", ip_to_delete);
+                }
                 break;
+
 
             case 4: // filtre par masque
                 break;
