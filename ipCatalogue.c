@@ -9,7 +9,7 @@
 #include <regex.h>
 #include <arpa/inet.h>
 
-#define MAX_LINE_LENGTH 18
+#define MAX_LINE_LENGTH 15
 #define MAX_LINE 300
 
 
@@ -163,7 +163,7 @@ char **ajout_ip(char** ip_array, int *ip_count) {
         return NULL;
     }
 
-    cpy_tab[i][0] = '\n';
+    cpy_tab[i][0] = '\0';
     strcat(cpy_tab[i], ip);
     printf("L'adresse IP %s a été ajoutée au tableau.\n", ip);
     (*ip_count)++;
@@ -217,11 +217,18 @@ char* detailIP(const char* ip)
 }
 
 void afficher_ips(char** ip_array, int ip_count) {
-    printf("%d\n",ip_count);
+    int max_len = 0;
     for (int j = 0; j < ip_count; j++) {
-        printf("%s" ,ip_array[j]);
+        int len = strlen(ip_array[j]);
+        if (len > max_len) {
+            max_len = len;
+        }
     }
-    printf("\n\n");
+    printf("%d\n", ip_count);
+    for (int j = 0; j < ip_count; j++) {
+        printf("%-*s", max_len + 1, ip_array[j]); // Largeur de champ variable en fonction de la longueur de la plus longue adresse IP
+    }
+    printf("\n");
 }
 
 
@@ -233,41 +240,51 @@ void afficher_ips(char** ip_array, int ip_count) {
 int main()
 {
     char **lines; // tableau de pointeurs vers les lignes lues du fichier
-    char buffer[MAX_LINE_LENGTH]; // tableau temporaire pour stocker chaque ligne lue
-    int i = 0; // compteur pour parcourir le tableau de lignes
+    char **buffer; // tableau temporaire pour stocker chaque ligne lue
+    int lines_count = 0; // compteur pour parcourir le tableau de lignes
     int max_lines = 500; // nombre maximum de lignes à lire
     lines = malloc(max_lines * sizeof(char *));
-    if (lines == NULL) {
+    buffer = malloc(max_lines * sizeof(char *));
+
+    if (lines == NULL || buffer == NULL) {
         printf("Erreur d'allocation mémoire.\n");
         exit(1);
     }
+
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
-    fic = open("ipCatalogue.txt", O_RDWR | O_APPEND);
+    fic = open("monfichier.txt", O_RDWR | O_APPEND | O_CREAT);
 
     if (fic == -1){
         printf("Erreur lors de l'ouverture du fichier");
         return 0;
     }
 
-    int bits; // variable pour stocker le nombre de bits lus depuis le fichier
+    int bytes_read; // variable pour stocker le nombre de bytes lus depuis le fichier
 
     // Lecture des lignes du fichier tant que le nombre maximum de lignes n'est pas atteint
     // et tant qu'il y a encore des lignes à lire
-    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
+    while((bytes_read = read(fic, buffer, sizeof(char *))) > 0){
         // Allocation dynamique de mémoire pour stocker chaque ligne lue
-        lines[i] = malloc(bits + 1);
-        if (lines[i] == NULL) {
+        lines[lines_count] = malloc(bytes_read + 1);
+        if (lines[lines_count] == NULL) {
             printf("Erreur d'allocation mémoire.\n");
             exit(1);
         }
 
         // Copie de la ligne lue depuis le buffer vers le tableau de lignes
-        strncpy(lines[i], buffer, bits);
-        lines[i][bits] = '\0'; // ajout du caractère de fin de chaîne
+        strncpy(lines[lines_count], buffer, bytes_read);
+        lines[lines_count][bytes_read] = '\0'; // ajout du caractère de fin de chaîne
 
-        i++; // passage à la ligne suivante
+        lines_count++; // passage à la ligne suivante
     }
+
+    // fermer le fichier
+    if (close(fic) == -1) {
+        perror("close");
+        exit(EXIT_FAILURE);
+    }
+
 
     // Exemple de traitement à effectuer sur les données lues :
     // création d'un tableau de caractères pour stocker une adresse IP
@@ -281,7 +298,6 @@ int main()
 
 
     int choix = 0;
-    int valeur = i;
 
     while(choix != 6){
         
@@ -302,13 +318,13 @@ int main()
         {
 
             case 1: //ajout IP
-                lines = ajout_ip(lines,&valeur);
+                lines = ajout_ip(lines,&lines_count);
                 // valeur=valeur+1;
                 break;
 
             case 2: //affichage IP enregistré
                 printf("\nVoici les IPs enregistrées\n");
-                afficher_ips(lines,valeur);
+                afficher_ips(lines,lines_count);
                 
                 break;
 
@@ -342,10 +358,38 @@ int main()
 
     }
 
+    int fd; // descripteur de fichier
+    int i;
+
+    // ouvrir le fichier en mode écriture et écraser le contenu existant s'il existe déjà
+    fd = open("monfichier.txt", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // écrire chaque ligne de lines dans le fichier
+    for (i = 0; i < lines_count; i++) {
+        if (write(fd, lines[i], strlen(lines[i])) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+        if (write(fd, "\n", 1) == -1) {
+            perror("write");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // fermer le fichier
+    if (close(fd) == -1) {
+        perror("close");
+        exit(EXIT_FAILURE);
+    }
+
 
 
         // libérer la mémoire allouée pour le tableau de chaînes de caractères
-    for (int j = 0; j < i; j++) {
+    for (int j = 0; j < lines_count; j++) {
         free(lines[j]);
     }
 
