@@ -216,7 +216,7 @@ char* detailIP(const char* ip)
 }
 
 void afficher_ips(char** ip_array, int ip_count) {
-    printf("%d\n",ip_count);
+    printf("\n");
     for (int j = 0; j < ip_count; j++) {
         printf("%s" ,ip_array[j]);
     }
@@ -242,7 +242,7 @@ int main()
     }
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
-    fic = open("ipCatalogue.txt", O_RDWR | O_APPEND);
+    fic = open("output/ipCatalogue.txt", O_RDWR | O_APPEND);
 
     if (fic == -1){
         printf("Erreur lors de l'ouverture du fichier");
@@ -270,7 +270,7 @@ int main()
 
     // Exemple de traitement à effectuer sur les données lues :
     // création d'un tableau de caractères pour stocker une adresse IP
-    char addIPdetail[20];
+    char *addIPdetail = NULL;
 
     // afficher les lignes stockées dans le tableau de chaînes de caractères
     // for (int j = 0; j < i; j++) {
@@ -334,13 +334,14 @@ int main()
             case 5: //détail sur une IP
 
                 printf("\nRenseigné une adresse IP pour plus de détail\n");
-                scanf("%s",&addIPdetail);
+                addIPdetail = malloc(sizeof(char*) * 20);
+                scanf("%s",addIPdetail);
                 while (check_ip_address(addIPdetail)!=0){
                     printf("\nErreur, l'adresse renseigné n'est pas correcte, merci de renseigné une adresse ip correcte : \n");
-                    scanf("%s",&addIPdetail);
+                    scanf("%s",addIPdetail);
                 }
-
                 detailIP(addIPdetail);
+                free(addIPdetail);
 
                 break;
             case 6:
