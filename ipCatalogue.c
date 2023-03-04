@@ -360,7 +360,7 @@ char		*ft_strjoin(char const *s1, char const *s2)
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main()
 {
-    char **lines; // tableau de pointeurs vers les lignes lues du fichier
+    char **lines = NULL; // tableau de pointeurs vers les lignes lues du fichier
     char buffer[MAX_LINE_LENGTH]; // tableau temporaire pour stocker chaque ligne lue
     int i = 0; // compteur pour parcourir le tableau de lignes
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
@@ -391,11 +391,13 @@ int main()
         else
             join = strdup(buffer);
     }
-    lines = ft_split(join, '\n');
-    free(join);
-    i = 0;
-    while (lines[i])
-        i++;
+    if (join){
+        lines = ft_split(join, '\n');
+        free(join);
+        i = 0;
+        while (lines[i])
+            i++;
+    }
     // Exemple de traitement à effectuer sur les données lues :
     // création d'un tableau de caractères pour stocker une adresse IP
     char *addIPdetail = NULL;
@@ -441,11 +443,14 @@ int main()
 
             case 3: // suppression IP
                 printf("\nVoici les IPs enregistrées, saisissez l'adresse IP à supprimer : \n");
+                afficher_ips(lines,valeur);
                 char ip_to_delete[MAX_LINE_LENGTH];
                 scanf("%s", ip_to_delete);
 
                 // Parcours du tableau de lignes pour trouver l'adresse IP à supprimer
                 for (int j = 0; j < valeur; j++) {
+                    while (!lines[j] && j < valeur)
+                        j++;
                     if (strcmp(lines[j], ip_to_delete) == 0) {
                         free(lines[j]); // libération de la mémoire allouée pour cette ligne
                         lines[j] = NULL; // assignation de NULL à l'élément supprimé pour éviter les erreurs de pointeurs
