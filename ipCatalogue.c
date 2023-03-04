@@ -125,7 +125,7 @@ char **ajout_ip(char** ip_array, int *ip_count) {
 
     char ip[MAX_LINE_LENGTH+1];
     char **cpy_tab = NULL;
-    int i, y;
+    int i;
 
     printf("Entrez une adresse IP : ");
     scanf("%s", ip);
