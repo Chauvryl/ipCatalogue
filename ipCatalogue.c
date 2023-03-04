@@ -229,44 +229,58 @@ void afficher_ips(char** ip_array, int ip_count) {
 //////////////////////////////////////////////////Main program //////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int main()
-{
-    char **lines; // tableau de pointeurs vers les lignes lues du fichier
-    char buffer[MAX_LINE_LENGTH]; // tableau temporaire pour stocker chaque ligne lue
-    int i = 0; // compteur pour parcourir le tableau de lignes
-    int max_lines = 500; // nombre maximum de lignes à lire
-    lines = malloc(max_lines * sizeof(char *));
-    if (lines == NULL) {
-        printf("Erreur d'allocation mémoire.\n");
+int main() {
+    char** ip_array = NULL;
+    int ip_count = 0;
+    int max_ips = 500;
+
+    // Ouverture du fichier en mode lecture
+    FILE* fp = fopen("output/ipCatalogue.txt", "r");
+    if (fp == NULL) {
+        fprintf(stderr, "Impossible d'ouvrir le fichier.\n");
         exit(1);
     }
-    // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
-    int fic;
-    fic = open("output/ipCatalogue.txt", O_RDWR | O_APPEND);
 
-    if (fic == -1){
-        printf("Erreur lors de l'ouverture du fichier");
-        return 0;
+    // Allocation dynamique de mémoire pour le tableau d'adresses IP
+    ip_array = malloc(max_ips * sizeof(char*));
+    if (ip_array == NULL) {
+        fprintf(stderr, "Erreur d'allocation mémoire pour le tableau d'adresses IP.\n");
+        exit(1);
     }
 
-    int bits; // variable pour stocker le nombre de bits lus depuis le fichier
+    // Lecture des adresses IP depuis le fichier
+    char line[MAX_LINE];
+    while (fgets(line, MAX_LINE, fp) != NULL) {
+        // Suppression du caractère de fin de ligne (\n)
+        line[strcspn(line, "\n")] = '\0';
 
-    // Lecture des lignes du fichier tant que le nombre maximum de lignes n'est pas atteint
-    // et tant qu'il y a encore des lignes à lire
-    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
-        // Allocation dynamique de mémoire pour stocker chaque ligne lue
-        lines[i] = malloc(bits + 1);
-        if (lines[i] == NULL) {
-            printf("Erreur d'allocation mémoire.\n");
-            exit(1);
+        // Vérification de la validité de l'adresse IP
+        if (check_ip_address(line) == 0) {
+            // Allocation dynamique de mémoire pour stocker l'adresse IP
+            ip_array[ip_count] = malloc((strlen(line) + 1) * sizeof(char));
+            if (ip_array[ip_count] == NULL) {
+                fprintf(stderr, "Erreur d'allocation mémoire pour l'adresse IP numéro %d.\n", ip_count);
+                exit(1);
+            }
+
+            // Copie de l'adresse IP dans le tableau
+            strcpy(ip_array[ip_count], line);
+            ip_count++;
+
+            // Réallocation de mémoire si nécessaire
+            if (ip_count >= max_ips) {
+                max_ips *= 2;
+                ip_array = realloc(ip_array, max_ips * sizeof(char*));
+                if (ip_array == NULL) {
+                    fprintf(stderr, "Erreur de réallocation mémoire pour le tableau d'adresses IP.\n");
+                    exit(1);
+                }
+            }
         }
-
-        // Copie de la ligne lue depuis le buffer vers le tableau de lignes
-        strncpy(lines[i], buffer, bits);
-        lines[i][bits] = '\0'; // ajout du caractère de fin de chaîne
-
-        i++; // passage à la ligne suivante
     }
+
+    // Fermeture du fichier
+    fclose(fp);
 
     // Exemple de traitement à effectuer sur les données lues :
     // création d'un tableau de caractères pour stocker une adresse IP
@@ -276,8 +290,6 @@ int main()
     // for (int j = 0; j < i; j++) {
     //     printf("%s", lines[j]);
     // }
-
-
 
     int choix = 0;
     int valeur = i;
@@ -355,10 +367,11 @@ int main()
 
     }
 
-        // libérer la mémoire allouée pour le tableau de chaînes de caractères
-    for (int j = 0; j < i; j++) {
-        free(lines[j]);
+    // Libération de la mémoire allouée pour le tableau d'adresses IP
+    for (int i = 0; i < ip_count; i++) {
+        free(ip_array[i]);
     }
+    free(ip_array);
 
     return 0;
 }
