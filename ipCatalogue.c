@@ -351,7 +351,64 @@ char		*ft_strjoin(char const *s1, char const *s2)
 	return (copy);
 }
 
+void menu_filtre() {
+    int choix;
+    int fic;
+    char *name;
+    
+    printf("Choisissez la taille du masque : \n");
+    printf("1. 8 bits\n");
+    printf("2. 16 bits\n");
+    printf("3. 24 bits\n");
+    printf("4. 32 bits\n");
+    scanf("%d", &choix);
+    
+    switch (choix) {
+        case 1:
+            name = "masque_8.txt";
+            break;
+        case 2:
+            name = "masque_16.txt";
+            break;
+        case 3:
+            name = "masque_24.txt";
+            break;
+        case 4:
+            name = "masque_32.txt";
+            break;
+        default:
+            printf("Choix invalide.\n");
+            return ;
+    }
+    fic = open(name, O_RDWR | O_APPEND);
+    if (fic == -1)
+    {
+        write(1, "f", 1);
+        //erreur
+    }
 
+    int bits;
+    char *tmp = NULL;
+    char *join = NULL;
+    char buffer[MAX_LINE_LENGTH];
+    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
+        buffer[bits] = '\0';
+        if (join)
+        {
+            tmp = strdup(join);
+            free(join);
+            join = ft_strjoin(tmp, buffer);
+            free(tmp);
+        }
+        else
+            join = strdup(buffer);
+    }
+    if (join){
+        printf("\n");
+        printf("%s\n",join);
+    }
+    close(fic);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -462,6 +519,7 @@ int main()
 
 
             case 4: // filtre par masque
+                menu_filtre();
                 break;
 
             case 5: //détail sur une IP
