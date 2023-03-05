@@ -124,16 +124,16 @@ void put_ip(char *adressIP, int masque) {
 
     switch (masque) {
         case 1:
-            name = "masque_8.txt";
+            name = "../masque_8.txt";
             break;
         case 2:
-            name = "masque_16.txt";
+            name = "../masque_16.txt";
             break;
         case 3:
-            name = "masque_24.txt";
+            name = "../masque_24.txt";
             break;
         case 4:
-            name = "masque_32.txt";
+            name = "../masque_32.txt";
             break;
         default:
             printf("Choix invalide.\n");
@@ -148,6 +148,7 @@ void put_ip(char *adressIP, int masque) {
     while (adressIP[i])
         i++;
     write(fic, adressIP, i);
+    write(fic, "\n", 1);
     close(fic);
 }
 
@@ -268,7 +269,7 @@ char* detailIP(const char* ip)
 void afficher_ips(char** ip_array, int ip_count) {
     printf("\n");
     for (int j = 0; j < ip_count; j++) {
-        if (ip_array[j])
+        if (ip_array[j] && ip_array[j][0] != '\n')
             printf("%s\n" ,ip_array[j]);
     }
     printf("\n\n");
@@ -433,9 +434,8 @@ void menu_filtre() {
     fic = open(name, O_RDWR | O_APPEND);
     if (fic == -1)
     {
-        printf("Aucun fichier disponible");
-	return 0;
-        //erreur
+        printf("erreur lors de l'ouverture du fichier\n");
+        return ;
     }
 
     int bits;
@@ -473,7 +473,7 @@ int main()
     int i = 0; // compteur pour parcourir le tableau de lignes
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
-    fic = open("output/ipCatalogue.txt", O_RDWR | O_APPEND);
+    fic = open("ipCatalogue.txt", O_RDWR | O_APPEND);
 
     if (fic == -1){
         printf("Erreur lors de l'ouverture du fichier");
@@ -561,7 +561,7 @@ int main()
                         j++;
                     if (strcmp(lines[j], ip_to_delete) == 0) {
                         free(lines[j]); // libération de la mémoire allouée pour cette ligne
-                        lines[j] = NULL; // assignation de NULL à l'élément supprimé pour éviter les erreurs de pointeurs
+                        lines[j][0] = '\n'; // assignation de NULL à l'élément supprimé pour éviter les erreurs de pointeurs
                         printf("L'adresse IP %s a été supprimée du tableau.\n", ip_to_delete);
                         break;
                     }
@@ -596,11 +596,32 @@ int main()
         }
 
     }
-
+    fic = open("ipCatalogue.txt", O_RDONLY | O_WRONLY | O_TRUNC);
+    if (fic == -1) {
+        printf("Erreur : impossible d'ouvrir le fichier.\n");
+        return (0);
+    }
+    int y = 0;
+    if (i > 0)
+    {   
+        while (lines[y][0] == '\n')
+            y++;
+        int z;
+        while (lines[y]){
+            while (lines[y][0] == '\n')
+                y++;
+            z = 0;
+            while (lines[y][z])
+                z++;
+            write(fic, lines[y], z);
+            write(fic, "\n", 1);
+            y++;
+        }
+    }
+    close(fic);
         // libérer la mémoire allouée pour le tableau de chaînes de caractères
     for (int j = 0; j < i; j++) {
         free(lines[j]);
     }
-
     return 0;
 }
