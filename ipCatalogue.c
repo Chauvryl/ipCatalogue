@@ -169,6 +169,58 @@ char **ajout_ip(char** ip_array, int *ip_count) {
     return cpy_tab;
 }
 
+void detect_ip(char *adresseIP) {
+    int premierOctet;
+    int masque;
+
+    premierOctet = atoi(adressip);
+    if (premierOctet >= 1 && premierOctet <= 126) {
+        put_ip(adresseIP, 1);
+        printf("L'adresse IP %s a été ajouté au fichier masque_8.\n", adresseIP);
+    } else if (premierOctet >= 128 && premierOctet <= 191) {
+        put_ip(adresseIP, 2)
+        printf("L'adresse IP %s a été ajouté au fichier masque_16.\n", adresseIP);
+    } else if (premierOctet >= 192 && premierOctet <= 223) {
+        put_ip(adresseIP, 3)
+        printf("L'adresse IP %s a été ajouté au fichier masque_24.\n", adresseIP);
+    } else {
+        put_ip(adresseIP, 4)
+        printf("L'adresse IP %s a été ajouté au fichier masque_32.\n", adresseIP);
+    }
+}
+
+void put_ip(char *adresseIP, int masque) {
+    int ip;
+    int fic;
+
+    switch (masque) {
+        case 1:
+            name = "masque_8.txt";
+            break;
+        case 2:
+            name = "masque_16.txt";
+            break;
+        case 3:
+            name = "masque_24.txt";
+            break;
+        case 4:
+            name = "masque_32.txt";
+            break;
+        default:
+            printf("Choix invalide.\n");
+            return ;
+    }
+    fic = open(name, O_RDWR | O_APPEND);
+    if (fic == -1) {
+        printf("Erreur : impossible d'ouvrir le fichier.\n");
+        return ;
+    }
+    int i = 0;
+    while (adressip[i])
+        i++;
+    write(fic, adressip, i);
+    close(fichier);
+}
 
 
 char* detailIP(const char* ip)
