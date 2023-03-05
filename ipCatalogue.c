@@ -433,7 +433,8 @@ void menu_filtre() {
     fic = open(name, O_RDWR | O_APPEND);
     if (fic == -1)
     {
-        write(1, "f", 1);
+        printf("Aucun fichier disponible");
+	return 0;
         //erreur
     }
 
