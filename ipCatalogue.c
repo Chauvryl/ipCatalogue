@@ -54,7 +54,7 @@ int check_ip_address(const char* str)
     // Libération de la mémoire utilisée pour stocker la structure de l'expression régulière compilée
     regfree(&regex);
 }
- 
+
 
 
 int is_private_ipv4(struct in_addr addr) {
@@ -118,16 +118,65 @@ int get_ipv4_type(struct in_addr addr) {
     }
 }
 
+void put_ip(char *adressIP, int masque) {
+    int fic;
+    char *name;
 
+    switch (masque) {
+        case 1:
+            name = "masque_8.txt";
+            break;
+        case 2:
+            name = "masque_16.txt";
+            break;
+        case 3:
+            name = "masque_24.txt";
+            break;
+        case 4:
+            name = "masque_32.txt";
+            break;
+        default:
+            printf("Choix invalide.\n");
+            return ;
+    }
+    fic = open(name, O_RDWR | O_APPEND);
+    if (fic == -1) {
+        printf("Erreur : impossible d'ouvrir le fichier.\n");
+        return ;
+    }
+    int i = 0;
+    while (adressIP[i])
+        i++;
+    write(fic, adressIP, i);
+    close(fic);
+}
+
+void detect_ip(char *adresseIP) {
+    int premierOctet;
+
+    premierOctet = atoi(adresseIP);
+    if (premierOctet >= 1 && premierOctet <= 126) {
+        put_ip(adresseIP, 1);
+        printf("L'adresse IP %s a été ajouté au fichier masque_8.\n", adresseIP);
+    } else if (premierOctet >= 128 && premierOctet <= 191) {
+        put_ip(adresseIP, 2);
+        printf("L'adresse IP %s a été ajouté au fichier masque_16.\n", adresseIP);
+    } else if (premierOctet >= 192 && premierOctet <= 223) {
+        put_ip(adresseIP, 3);
+        printf("L'adresse IP %s a été ajouté au fichier masque_24.\n", adresseIP);
+    } else {
+        put_ip(adresseIP, 4);
+        printf("L'adresse IP %s a été ajouté au fichier masque_32.\n", adresseIP);
+    }
+}
 
 // Fonction pour ajouter une adresse IP au tableau de lignes
 char **ajout_ip(char** ip_array, int *ip_count) {
-    system("clear");
-    // printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
+    printf("Nombre d'adresses IP dans le tableau : %d\n", *ip_count);
 
     char ip[MAX_LINE_LENGTH+1];
     char **cpy_tab = NULL;
-    int i, y;
+    int i;
 
     printf("Entrez une adresse IP : ");
     scanf("%s", ip);
@@ -164,14 +213,13 @@ char **ajout_ip(char** ip_array, int *ip_count) {
         return NULL;
     }
 
-    cpy_tab[i][0] = '\n';
+    cpy_tab[i][0] = '\0';
     strcat(cpy_tab[i], ip);
-    printf("L'adresse IP %s a été ajoutée au tableau.\n\n", ip);
+    detect_ip(ip);
+    printf("L'adresse IP %s a été ajoutée au tableau.\n", ip);
     (*ip_count)++;
     return cpy_tab;
 }
-
-
 
 char* detailIP(const char* ip)
 {
@@ -217,16 +265,200 @@ char* detailIP(const char* ip)
 
 }
 
-void afficher_ips(char **ip_array, int ip_count, int max_ip_length) {
-    system("clear");
-    // printf("%d\n", ip_count);
+void afficher_ips(char** ip_array, int ip_count) {
+    printf("\n");
     for (int j = 0; j < ip_count; j++) {
-        int spaces = max_ip_length - strlen(ip_array[j]);
-        printf("%s%*s", ip_array[j], spaces, "");
+        if (ip_array[j])
+            printf("%s\n" ,ip_array[j]);
     }
     printf("\n\n");
 }
 
+char		**ft_get_tab(char const *s, char c)
+{
+	int		i;
+	int		segement;
+	char	**tab;
+
+	segement = 0;
+	i = 0;
+	while (s[i])
+	{
+		if (s[i] != c)
+		{
+			segement++;
+			while (s[i] && s[i] != c)
+				i++;
+		}
+		else
+			i++;
+	}
+	if (!(tab = malloc(sizeof(*tab) * (segement + 1))))
+		return (0);
+	tab[segement] = 0;
+	return (tab);
+}
+
+char		*ft_fill_tab(char const *s, char c, char *tab, int i)
+{
+	int		index;
+
+	index = 0;
+	while (s[i] && s[i] != c)
+	{
+		tab[index] = s[i];
+		index++;
+		i++;
+	}
+	return (tab);
+}
+
+int			ft_get_segement(char const *s, char c, int *i)
+{
+	int		segement;
+
+	segement = 0;
+	while (s[*i] && s[*i] != c)
+	{
+		segement++;
+		*i = *i + 1;
+	}
+	return (segement);
+}
+
+char		**ft_split(char const *s, char c)
+{
+	int		i;
+	int		line;
+	int		segement;
+	char	**tab;
+
+	if (!s)
+		return (0);
+	if (!(tab = ft_get_tab(s, c)))
+		return (0);
+	i = 0;
+	line = -1;
+	while (s[i])
+	{
+		if (s[i] != c)
+		{
+			segement = ft_get_segement(s, c, &i);
+			if (!(tab[++line] = malloc(sizeof(**tab) * (segement + 1))))
+				return (0);
+			tab[line] = ft_fill_tab(s, c, tab[line], i - segement);
+			tab[line][segement] = '\0';
+		}
+		else
+			i++;
+	}
+	return (tab);
+}
+
+char		*ft_allocmemory(char const *s1, char const *s2, char *copy)
+{
+	int		i;
+	int		j;
+
+	i = 0;
+	j = 0;
+	while (s1[i] != '\0')
+	{
+		copy[j] = s1[i];
+		i++;
+		j++;
+	}
+	i = 0;
+	while (s2[i] != '\0')
+	{
+		copy[j] = s2[i];
+		i++;
+		j++;
+	}
+	copy[j] = '\0';
+	return (copy);
+}
+
+char		*ft_strjoin(char const *s1, char const *s2)
+{
+	int		i;
+	int		j;
+	char	*copy;
+
+	if (!s1)
+		return (0);
+	if (!s2)
+		return (0);
+	i = 0;
+	j = 0;
+	copy = NULL;
+	i = strlen(s1);
+	j = strlen(s2);
+	copy = malloc(sizeof(*copy) * (i + j + 1));
+	if (copy == NULL)
+		return (NULL);
+	copy = ft_allocmemory(s1, s2, copy);
+	return (copy);
+}
+
+void menu_filtre() {
+    int choix;
+    int fic;
+    char *name;
+    
+    printf("Choisissez la taille du masque : \n");
+    printf("1. 8 bits\n");
+    printf("2. 16 bits\n");
+    printf("3. 24 bits\n");
+    printf("4. 32 bits\n");
+    scanf("%d", &choix);
+    
+    switch (choix) {
+        case 1:
+            name = "masque_8.txt";
+            break;
+        case 2:
+            name = "masque_16.txt";
+            break;
+        case 3:
+            name = "masque_24.txt";
+            break;
+        case 4:
+            name = "masque_32.txt";
+            break;
+        default:
+            printf("Choix invalide.\n");
+            return ;
+    }
+    fic = open(name, O_RDWR | O_APPEND);
+    if (fic == -1)
+    {
+        write(1, "f", 1);
+        //erreur
+    }
+
+    int bits;
+    char *tmp = NULL;
+    char *join = NULL;
+    char buffer[MAX_LINE_LENGTH];
+    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
+        buffer[bits] = '\0';
+        if (join)
+        {
+            tmp = strdup(join);
+            free(join);
+            join = ft_strjoin(tmp, buffer);
+            free(tmp);
+        }
+        else
+            join = strdup(buffer);
+    }
+    if (join){
+        printf("\n");
+        printf("%s\n",join);
+    }
+    close(fic);
+}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -235,63 +467,47 @@ void afficher_ips(char **ip_array, int ip_count, int max_ip_length) {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int main()
 {
-    char **lines; // tableau de pointeurs vers les lignes lues du fichier
-    char **buffer; // tableau temporaire pour stocker chaque ligne lue
-    int lines_count = 0; // compteur pour parcourir le tableau de lignes
-    lines = malloc(MAX_LINE * sizeof(char *));
-    buffer = malloc(MAX_LINE * sizeof(char *));
-    
-    if (lines == NULL || buffer == NULL) {
-        printf("Erreur d'allocation mémoire.\n");
-        exit(1);
-    }
-
-
+    char **lines = NULL; // tableau de pointeurs vers les lignes lues du fichier
+    char buffer[MAX_LINE_LENGTH]; // tableau temporaire pour stocker chaque ligne lue
+    int i = 0; // compteur pour parcourir le tableau de lignes
     // Ouverture du fichier en mode lecture/écriture avec ajout à la fin
     int fic;
-    fic = open("ipCatalogue.txt", O_RDWR );
+    fic = open("output/ipCatalogue.txt", O_RDWR | O_APPEND);
+
     if (fic == -1){
         printf("Erreur lors de l'ouverture du fichier");
         return 0;
     }
 
     int bits; // variable pour stocker le nombre de bits lus depuis le fichier
+    char *tmp = NULL;
+    char *join = NULL;
 
     // Lecture des lignes du fichier tant que le nombre maximum de lignes n'est pas atteint
     // et tant qu'il y a encore des lignes à lire
-    while((bits = read(fic, buffer, MAX_LINE_LENGTH + 1)) > 0 && lines_count < MAX_LINE){
+    while((bits = read( fic , buffer , MAX_LINE_LENGTH )) > 0){
         // Allocation dynamique de mémoire pour stocker chaque ligne lue
-        lines[lines_count] = malloc(bits + 1);
-        if (lines[lines_count] == NULL) {
-            printf("Erreur d'allocation mémoire.\n");
-            exit(1);
+        buffer[bits] = '\0';
+        if (join)
+        {
+            tmp = strdup(join);
+            free(join);
+            join = ft_strjoin(tmp, buffer);
+            free(tmp);
         }
-
-        // Copie de la ligne lue depuis le buffer vers le tableau de lignes
-        strncpy(lines[lines_count], buffer, bits);
-        lines[lines_count][bits] = '\0'; // ajout du caractère de fin de chaîne
-
-        lines_count++; // passage à la ligne suivante
+        else
+            join = strdup(buffer);
     }
-
-    // fermer le fichier
-    if (close(fic) == -1) {
-        perror("close");
-        exit(EXIT_FAILURE);
+    if (join){
+        lines = ft_split(join, '\n');
+        free(join);
+        i = 0;
+        while (lines[i])
+            i++;
     }
-    // Détermination de la longueur maximale d'une adresse IP dans le tableau
-    int max_ip_length = 0;
-    for (int i = 0; i < lines_count; i++) {
-        int current_ip_length = strlen(lines[i]);
-        if (current_ip_length > max_ip_length) {
-            max_ip_length = current_ip_length;
-        }
-    }
-
-
     // Exemple de traitement à effectuer sur les données lues :
     // création d'un tableau de caractères pour stocker une adresse IP
-    char addIPdetail[20];
+    char *addIPdetail = NULL;
 
     // afficher les lignes stockées dans le tableau de chaînes de caractères
     // for (int j = 0; j < i; j++) {
@@ -301,9 +517,10 @@ int main()
 
 
     int choix = 0;
+    int valeur = i;
 
     while(choix != 6){
-        
+
 
         printf("---Menu---\n\n");
         printf("1.Ajouter une IP\n");
@@ -321,67 +538,51 @@ int main()
         {
 
             case 1: //ajout IP
-                lines = ajout_ip(lines,&lines_count);
+                lines = ajout_ip(lines,&valeur);
                 // valeur=valeur+1;
                 break;
 
             case 2: //affichage IP enregistré
                 printf("\nVoici les IPs enregistrées\n");
-                afficher_ips(lines,lines_count, max_ip_length);
-                
+                afficher_ips(lines,valeur);
+
                 break;
 
             case 3: // suppression IP
-                afficher_ips(lines,lines_count, max_ip_length);
-                printf("\nVoici les IPs enregistrées, saisissez l'adresse IP à supprimer : \n\n"); 
-                char ip_to_delete[MAX_LINE_LENGTH]; 
-                scanf("%s", ip_to_delete); 
+                printf("\nVoici les IPs enregistrées, saisissez l'adresse IP à supprimer : \n");
+                afficher_ips(lines,valeur);
+                char ip_to_delete[MAX_LINE_LENGTH];
+                scanf("%s", ip_to_delete);
 
-                // Recherche de l'indice de l'adresse IP à supprimer dans le tableau
-                int ip_index = -1;
-                int trouve = 0;
-                int g = 0;
-                printf("%d", lines_count);
-                while (g <= lines_count && trouve ==1){
-                    if (strcmp(lines[g], ip_to_delete) == 0) {
-                        printf(" ||  %s  ||",lines[g]);
-                        printf(" ||  %s  ||",ip_to_delete);
-
-                        ip_index = g;
-                        trouve = 1;
+                // Parcours du tableau de lignes pour trouver l'adresse IP à supprimer
+                for (int j = 0; j < valeur; j++) {
+                    while (!lines[j] && j < valeur)
+                        j++;
+                    if (strcmp(lines[j], ip_to_delete) == 0) {
+                        free(lines[j]); // libération de la mémoire allouée pour cette ligne
+                        lines[j] = NULL; // assignation de NULL à l'élément supprimé pour éviter les erreurs de pointeurs
+                        printf("L'adresse IP %s a été supprimée du tableau.\n", ip_to_delete);
+                        break;
                     }
-                    g++;
-                }
-                
-
-                if (ip_index == -1) {
-                    printf("\nL'adresse IP %s n'a pas été trouvée dans le tableau.\n\n", ip_to_delete);
-                } else {
-                    // Suppression de l'adresse IP et décalage des éléments suivants dans le tableau
-                    free(lines[ip_index]);
-                    for (int i = ip_index; i < lines_count - 1; i++) {
-                        lines[i] = lines[i+1];
-                    }
-                    lines[lines_count-1] = NULL;
-                    lines_count--;
-                    printf("\nL'adresse IP %s a été supprimée du tableau.\n\n", ip_to_delete);
                 }
                 break;
 
 
             case 4: // filtre par masque
+                menu_filtre();
                 break;
 
             case 5: //détail sur une IP
 
                 printf("\nRenseigné une adresse IP pour plus de détail\n");
-                scanf("%s",&addIPdetail);
+                addIPdetail = malloc(sizeof(char*) * 20);
+                scanf("%s",addIPdetail);
                 while (check_ip_address(addIPdetail)!=0){
                     printf("\nErreur, l'adresse renseigné n'est pas correcte, merci de renseigné une adresse ip correcte : \n");
-                    scanf("%s",&addIPdetail);
+                    scanf("%s",addIPdetail);
                 }
-                
                 detailIP(addIPdetail);
+                free(addIPdetail);
 
                 break;
             case 6:
@@ -395,41 +596,8 @@ int main()
 
     }
 
-        // Ouverture du fichier en mode lecture/écriture avec écrasement des données existantes
-    int fic2;
-    fic2 = open("ipCatalogue.txt", O_RDWR | O_TRUNC);
-
-    if (fic2 == -1){
-        printf("Erreur lors de l'ouverture du fichier");
-        return 0;
-    }
-    // Écriture des lignes dans le fichier
-    for (int i = 0; i < lines_count; i++) {
-        int line_length = strlen(lines[i]);
-        for (int j = 0; j < line_length; j++) {
-            if (lines[i][j] == '\0' || lines[i][j] == '\n') {
-                if (write(fic, "\n", 1) == -1) {
-                    perror("write");
-                    exit(EXIT_FAILURE);
-                }
-            } else {
-                if (write(fic, &lines[i][j], 1) == -1) {
-                    perror("write");
-                    exit(EXIT_FAILURE);
-                }
-            }
-        }
-    }
-
-    // fermer le fichier
-    if (close(fic2) == -1) {
-        perror("close");
-        exit(EXIT_FAILURE);
-    }
-
-
         // libérer la mémoire allouée pour le tableau de chaînes de caractères
-    for (int j = 0; j < lines_count; j++) {
+    for (int j = 0; j < i; j++) {
         free(lines[j]);
     }
 
